@@ -1,0 +1,12 @@
+{
+  "name": "lavoirs",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @lavoirs/web",
+    "build": "npm run build --workspace @lavoirs/web",
+    "preview": "npm run preview --workspace @lavoirs/web"
+  }
+}
