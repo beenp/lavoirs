@@ -34,6 +34,7 @@ export default function PublicDemoPage() {
         groupId={DEMO_ROOM_ID}
         user={member}
         requestToken={() => requestDemoRoomToken(member.name, inviteCode)}
+        showMoviePrompts
       />
       <button className="text-button" onClick={() => setMember(null)}>Change name or invite code</button>
     </>}

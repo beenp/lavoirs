@@ -1,32 +1,18 @@
 ﻿# Lavoirs
 
-A working frontend demo and integration scaffold for a small-group, interest-based video meetup experience. The planned stack is React, Vite, TypeScript, Tailwind CSS, LiveKit Cloud, Supabase, and Vercel.
+A working frontend demo and integration for a small-group, interest-based video meetup experience. The planned stack is React, Vite, TypeScript, Tailwind CSS, LiveKit Cloud, Supabase, and Vercel.
 
 ## Product flow
 
-1. A member creates a profile with a name, approximate location, description, interests, and explicit media/transcription preferences.
-2. Matching shows an approximate count of nearby members with overlapping interests and places the member in a queue for a group of four.
-3. A LiveKit video room brings the group together with one or two interest-based conversation prompts; members can vote to skip a prompt or leave at any time.
+1. A member creates a profile with a name and media preferences.
+2. A LiveKit video room brings the group together with interest-based conversation prompts; members can skip their local prompt
 4. At the end of a 20-minute session, the service presents three relevant in-person events occurring within the next two weeks.
 5. Members can opt into an event and exchange contact details only with mutual consent.
 
-## Scaffold map
-
-- `apps/web/` — React and Vite frontend, organized by profile, matching, video room, and event features. `src/lib/` is reserved for browser clients and API access.
-- `api/` — Vercel serverless API routes for profiles, matchmaking, LiveKit, event recommendations, and consent-based contact exchange.
-- `middleware/` — request authentication, rate limiting, input validation, and approximate-location privacy boundaries.
-- `packages/shared/` — shared TypeScript domain type file locations for profiles, matches, LiveKit sessions, and events.
-- `supabase/migrations/` — planned schema migration locations for profiles, interests, groups, prompts, events, and connections.
-- `supabase/functions/` — planned server-side matchmaking and recommendation function locations.
-- `public/` — static frontend assets.
 
 ## LiveKit API file map
 
 - `api/livekit/token.ts` — short-lived room access token endpoint.
-- `api/livekit/rooms.ts` — room lifecycle operations for matched groups.
-- `api/livekit/participants.ts` — participant state and room membership operations.
-- `api/livekit/webhook.ts` — LiveKit room and participant event receiver.
-- `api/livekit/transcription.ts` — consent-gated transcription integration boundary.
 - `apps/web/src/lib/livekit-client.ts` — browser-side LiveKit connection boundary.
 - `apps/web/src/features/room/` — room UI, participant grid, media controls, prompts, voting, and transcription consent.
 
@@ -59,14 +45,7 @@ The login, profile, matching demo, room preview, and frontend configuration are 
 #### Profile feature
 
 - `apps/web/src/features/profile/ProfilePage.tsx` — profile screen container and profile display flow.
-- `apps/web/src/features/profile/ProfileForm.tsx` — form UI for name, description, approximate location, interests, and preference controls.
-
-#### Matching feature
-
-- `apps/web/src/features/matching/MatchingPage.tsx` — matching screen that combines interest selection, nearby availability, and queue state.
-- `apps/web/src/features/matching/InterestSelector.tsx` — UI for selecting the interests used for matching and conversation prompts.
-- `apps/web/src/features/matching/QueueStatus.tsx` — waiting-room status, including progress toward a four-person group.
-- `apps/web/src/features/matching/MatchPreview.tsx` — pre-room summary of a proposed group and its shared interests.
+- `apps/web/src/features/profile/ProfileForm.tsx` — form UI for name
 
 #### Video room feature
 
@@ -76,7 +55,6 @@ The login, profile, matching demo, room preview, and frontend configuration are 
 - `apps/web/src/features/room/MediaControls.tsx` — camera, microphone, and leave-room controls.
 - `apps/web/src/features/room/ConversationPrompt.tsx` — display for the active icebreaker prompt.
 - `apps/web/src/features/room/PromptVoting.tsx` — controls for voting to skip or keep a prompt.
-- `apps/web/src/features/room/TranscriptConsent.tsx` — explicit consent UI for any speech transcription; transcription should remain off without consent.
 
 #### Event and connection feature
 
@@ -101,26 +79,5 @@ The login, profile, matching demo, room preview, and frontend configuration are 
 - `api/livekit/transcription.ts` — server boundary for starting or handling transcription only when the required consent is recorded.
 - `api/events/recommendations.ts` — returns three relevant in-person event recommendations within the requested two-week window.
 - `api/connections/contact-exchange.ts` — records and fulfills mutual consent before sharing contact information.
-
-### Middleware and shared domain types
-
-- `middleware/auth.ts` — reusable authentication checks for protected API requests.
-- `middleware/rate-limit.ts` — reusable request throttling for endpoints that need abuse protection.
-- `middleware/location-privacy.ts` — limits location precision and helps keep exact location out of public matching results.
-- `middleware/request-validation.ts` — shared request shape and input validation boundary for API handlers.
-- `packages/shared/src/profile.ts` — shared TypeScript type location for member profiles and profile preferences.
-- `packages/shared/src/matching.ts` — shared type location for interests, queue entries, matches, and groups.
-- `packages/shared/src/livekit.ts` — shared type location for rooms, participants, tokens, and LiveKit events.
-- `packages/shared/src/events.ts` — shared type location for event recommendations and contact exchange state.
-
-### Supabase
-
-- `supabase/migrations/001_profiles.sql` — planned database schema migration for member profiles and privacy preferences.
-- `supabase/migrations/002_interests_and_matching.sql` — planned schema migration for interests, queue entries, and matching data.
-- `supabase/migrations/003_rooms_and_participants.sql` — planned schema migration for group sessions and participant membership.
-- `supabase/migrations/004_prompts_and_votes.sql` — planned schema migration for icebreaker prompts and skip votes.
-- `supabase/migrations/005_events_and_connections.sql` — planned schema migration for recommendations, event choices, and consent-based connections.
-- `supabase/functions/matchmaking/index.ts` — Supabase Edge Function entry point for server-side queue processing and group formation; it is not the React web entry point.
-- `supabase/functions/event-recommendations/index.ts` — Supabase Edge Function entry point for server-side event recommendation work; it is not the React web entry point.
 
 

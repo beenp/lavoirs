@@ -6,3 +6,4 @@ dist/
 .tools/
 test-results/
 playwright-report/
+.vercel

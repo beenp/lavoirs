@@ -14,9 +14,30 @@ interface Props {
     groupId: string;
     user: GroupMember;
     requestToken?: () => Promise<LiveKitTokenResponse>;
+    showMoviePrompts?: boolean;
 }
 
-export function LiveKitRoom({ groupId, user, requestToken }: Props) {
+const MOVIE_PROMPTS = [
+    'Which movie would you love to watch again for the first time, and why?',
+    'What film changed how you think about a genre?',
+    'If your life had an opening scene, what song would play?',
+    'Which fictional world would you visit for one day?',
+    'What movie do you defend even when your friends disagree?',
+    'Which movie character do you relate to more than you expected?',
+];
+const MOVIE_PROMPT_TOPIC = 'movie-prompt';
+
+function chooseMoviePrompt(participants: Participant[]) {
+    const identities = participants.map(participant => participant.identity).sort();
+    let hash = 2166136261;
+    for (const character of identities.join('|')) {
+        hash ^= character.charCodeAt(0);
+        hash = Math.imul(hash, 16777619);
+    }
+    return MOVIE_PROMPTS[(hash >>> 0) % MOVIE_PROMPTS.length];
+}
+
+export function LiveKitRoom({ groupId, user, requestToken, showMoviePrompts = false }: Props) {
     const [room, setRoom] = useState<LiveKitClientRoom | null>(null);
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [connecting, setConnecting] = useState(false);
@@ -24,8 +45,14 @@ export function LiveKitRoom({ groupId, user, requestToken }: Props) {
     const [error, setError] = useState('');
     const [micOn, setMicOn] = useState(false);
     const [cameraOn, setCameraOn] = useState(false);
+    const [moviePromptOffset, setMoviePromptOffset] = useState(0);
     const roomRef = useRef<LiveKitClientRoom | null>(null);
     const attempt = useRef(0);
+    const moviePromptOffsetRef = useRef(0);
+    const firstMoviePrompt = showMoviePrompts && participants.length <= 4 ? chooseMoviePrompt(participants) : null;
+    const moviePrompt = firstMoviePrompt
+        ? MOVIE_PROMPTS[(MOVIE_PROMPTS.indexOf(firstMoviePrompt) + moviePromptOffset) % MOVIE_PROMPTS.length]
+        : null;
 
     const refreshParticipants = useCallback((activeRoom: LiveKitClientRoom) => {
         setParticipants([activeRoom.localParticipant, ...activeRoom.remoteParticipants.values()]);
@@ -41,6 +68,8 @@ export function LiveKitRoom({ groupId, user, requestToken }: Props) {
         const currentAttempt = ++attempt.current;
         setConnecting(true);
         setError('');
+        moviePromptOffsetRef.current = 0;
+        setMoviePromptOffset(0);
         setMessage('Checking group access and requesting a room token…');
         let clientRoom: LiveKitClientRoom | null = null;
 
@@ -60,6 +89,19 @@ export function LiveKitRoom({ groupId, user, requestToken }: Props) {
                 .on(RoomEvent.LocalTrackUnpublished, refresh)
                 .on(RoomEvent.TrackMuted, refresh)
                 .on(RoomEvent.TrackUnmuted, refresh)
+                .on(RoomEvent.DataReceived, (payload, _participant, _kind, topic) => {
+                    if (topic !== MOVIE_PROMPT_TOPIC) return;
+                    try {
+                        const data = JSON.parse(new TextDecoder().decode(payload)) as { type?: unknown; offset?: unknown };
+                        if (data.type !== 'skip' || !Number.isInteger(data.offset)) return;
+                        const offset = data.offset as number;
+                        if (offset < 0 || offset >= MOVIE_PROMPTS.length) return;
+                        moviePromptOffsetRef.current = offset;
+                        setMoviePromptOffset(offset);
+                    } catch {
+                        // Ignore malformed room data packets.
+                    }
+                })
                 .on(RoomEvent.Disconnected, () => {
                     setRoom(null);
                     setParticipants([]);
@@ -142,6 +184,19 @@ export function LiveKitRoom({ groupId, user, requestToken }: Props) {
         }
     }
 
+    async function skipMoviePrompt() {
+        if (!room) return;
+        const offset = (moviePromptOffsetRef.current + 1) % MOVIE_PROMPTS.length;
+        moviePromptOffsetRef.current = offset;
+        setMoviePromptOffset(offset);
+        try {
+            const payload = new TextEncoder().encode(JSON.stringify({ type: 'skip', offset }));
+            await room.localParticipant.publishData(payload, { reliable: true, topic: MOVIE_PROMPT_TOPIC });
+        } catch (publishError) {
+            setError(publishError instanceof Error ? publishError.message : 'Could not send the prompt skip to the room.');
+        }
+    }
+
     return (
         <section className="call-card surface">
             <div className="call-heading">
@@ -156,6 +211,11 @@ export function LiveKitRoom({ groupId, user, requestToken }: Props) {
                     <div className="video-grid" aria-label="Room participants">
                         {participants.map((participant) => <ParticipantTile key={participant.identity} participant={participant} local={participant instanceof LocalParticipant} />)}
                         {participants.length < 4 ? <div className="waiting-tile"><span>✳</span><p>Waiting for more people to join…</p></div> : null}
+                        {moviePrompt ? <div className="movie-prompt-overlay" role="status" aria-live="polite">
+                            <span className="eyebrow">MOVIE FAN ICEBREAKER</span>
+                            <p>{moviePrompt}</p>
+                            <button type="button" className="control-button" onClick={() => void skipMoviePrompt()}>Skip prompt</button>
+                        </div> : null}
                     </div>
                     <div className="call-controls">
                         <button className={`control-button ${micOn ? 'enabled' : ''}`} onClick={() => void toggleMicrophone()}><span>{micOn ? '🎙' : '🔇'}</span>{micOn ? 'Mute mic' : 'Turn mic on'}</button>
