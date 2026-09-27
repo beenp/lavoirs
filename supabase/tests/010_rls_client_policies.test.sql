@@ -18,6 +18,16 @@ values
   ('50000000-0000-4000-8000-000000000001'::uuid, '00000000-0000-4000-8000-000000000003'::uuid),
   ('50000000-0000-4000-8000-000000000001'::uuid, '00000000-0000-4000-8000-000000000004'::uuid);
 
+-- Create a consent row as the database owner so the test can check its read policy.
+insert into public.contact_exchange_consents (
+  group_id, consenting_profile_id, other_profile_id
+)
+values (
+  '10000000-0000-4000-8000-000000000001'::uuid,
+  '00000000-0000-4000-8000-000000000001'::uuid,
+  '00000000-0000-4000-8000-000000000002'::uuid
+);
+
 -- Assume Ava's authenticated browser role and JWT subject for the policy assertions.
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
@@ -64,14 +74,16 @@ select ok(
 
 select lives_ok(
   $cmd$
-    insert into public.prompt_votes (group_prompt_id, profile_id, vote)
-    select assigned_prompt.id, auth.uid(), 'keep'
-    from public.group_prompts as assigned_prompt
-    where assigned_prompt.group_id = '10000000-0000-4000-8000-000000000001'::uuid
-    order by assigned_prompt.position
-    limit 1
+    select * from public.vote_on_group_prompt(
+      (select assigned_prompt.id
+       from public.group_prompts as assigned_prompt
+       where assigned_prompt.group_id = '10000000-0000-4000-8000-000000000001'::uuid
+       order by assigned_prompt.position
+       limit 1),
+      'keep'
+    )
   $cmd$,
-  'a member can vote on a prompt in their group'
+  'a member can vote through the protected prompt voting RPC'
 );
 
 select throws_ok(
@@ -99,18 +111,9 @@ select lives_ok(
   'a member can respond to an event recommended to their group'
 );
 
-select lives_ok(
-  $cmd$
-    insert into public.contact_exchange_consents (
-      group_id, consenting_profile_id, other_profile_id
-    )
-    values (
-      '10000000-0000-4000-8000-000000000001'::uuid,
-      auth.uid(),
-      '00000000-0000-4000-8000-000000000002'::uuid
-    )
-  $cmd$,
-  'a member can grant contact consent to another member of their group'
+select ok(
+  not has_table_privilege('authenticated', 'public.contact_exchange_consents', 'INSERT'),
+  'browser clients cannot write contact consent outside the protected server endpoint'
 );
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000002', true);

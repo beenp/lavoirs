@@ -4,6 +4,18 @@
 # working directory name when running `supabase init`.
 project_id = "New_folder"
 
+[functions.livekit-token]
+verify_jwt = true
+
+[functions.event-recommendations]
+verify_jwt = true
+
+[functions.contact-exchange]
+verify_jwt = true
+
+[functions.session-lifecycle]
+verify_jwt = false
+
 [api]
 enabled = true
 # Port to use for the API URL.

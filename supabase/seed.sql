@@ -146,6 +146,16 @@ set title = excluded.title,
     region = excluded.region,
     event_url = excluded.event_url;
 
+-- Tag the fixture event with the stable board-games interest for recommendation tests.
+insert into public.event_interests (event_id, interest_id)
+select fixture_event.id, board_games.id
+from public.events as fixture_event
+join public.interests as board_games
+  on board_games.name = 'board games'
+where fixture_event.source = 'local_fixture'
+  and fixture_event.source_event_id = 'demo-board-game-night'
+on conflict (event_id, interest_id) do nothing;
+
 -- Recommend the event at rank 1, resolving its ID by the stable source and event key.
 insert into public.group_event_recommendations (
   id,
