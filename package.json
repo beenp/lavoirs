@@ -1,0 +1,39 @@
+{
+    "name": "gather-livekit-slice",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "test:video": "playwright test",
+        "dev": "concurrently -k -n api,web -c blue,green \"node --env-file-if-exists=.env.local --import tsx server/dev-server.ts\" \"vite --config apps/web/vite.config.ts\"",
+        "dev:livekit": "node server/run-livekit.mjs",
+        "dev:local": "concurrently -k -n app,livekit \"npm run dev\" \"npm run dev:livekit\"",
+        "dev:api": "node --env-file-if-exists=.env.local --import tsx server/dev-server.ts",
+        "dev:web": "vite --config apps/web/vite.config.ts",
+        "typecheck": "tsc --noEmit -p apps/web/tsconfig.json && tsc --noEmit -p tsconfig.server.json",
+        "build": "tsc --project apps/web/tsconfig.json && vite build --config apps/web/vite.config.ts"
+    },
+    "dependencies": {
+        "express": "^5.1.0",
+        "livekit-client": "^2.15.6",
+        "livekit-server-sdk": "^2.13.3",
+        "lucide-react": "^0.468.0",
+        "react": "^19.1.1",
+        "react-dom": "^19.1.1",
+        "react-router-dom": "^7.18.4"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.63.0",
+        "@types/express": "^5.0.3",
+        "@types/node": "^22.18.6",
+        "@types/react": "^19.1.13",
+        "@types/react-dom": "^19.1.9",
+        "@vitejs/plugin-react": "^5.0.4",
+        "autoprefixer": "^10.4.20",
+        "concurrently": "^9.2.1",
+        "postcss": "^8.4.49",
+        "tailwindcss": "^3.4.17",
+        "tsx": "^4.20.5",
+        "typescript": "^5.9.2",
+        "vite": "^7.1.7"
+    }
+}

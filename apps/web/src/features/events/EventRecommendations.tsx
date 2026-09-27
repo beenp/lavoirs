@@ -1,0 +1,3 @@
+export default function EventRecommendations({ onBackToQueue }: { onBackToQueue: () => void }) {
+  return <section className="page-content"><div className="eyebrow">04 / THE NEXT ADVENTURE · PREVIEW</div><h1>Same people.<br/><em>New adventures.</em></h1><p className="muted">Your conversation is just the beginning.</p><div className="surface room-prompt"><h2>Real-world plans go here.</h2><p>After a 20-minute session, this page will show three nearby events happening in the next two weeks, plus mutual opt-in contact sharing.</p><p className="field-hint">Event recommendations and contact sharing are not connected yet. This page is ready for the events integration.</p></div><button className="primary" onClick={onBackToQueue}>Back to the queue →</button></section>;
+}

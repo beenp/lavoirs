@@ -1,0 +1,11 @@
+# Temporary four-person MVP deployment. Keep the source files in Git for the
+# Supabase and matchmaking merge, but deploy only the LiveKit token function.
+api/auth/
+api/connections/
+api/events/
+api/livekit/participants.ts
+api/livekit/rooms.ts
+api/livekit/transcription.ts
+api/livekit/webhook.ts
+api/matching/
+api/profiles/
