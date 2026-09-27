@@ -1,0 +1,13 @@
+alter table public.profiles enable row level security;
+alter table public.interests enable row level security;
+alter table public.profile_interests enable row level security;
+alter table public.match_queue enable row level security;
+alter table public.groups enable row level security;
+alter table public.group_members enable row level security;
+alter table public.prompts enable row level security;
+alter table public.group_prompts enable row level security;
+alter table public.prompt_votes enable row level security;
+alter table public.events enable row level security;
+alter table public.group_event_recommendations enable row level security;
+alter table public.event_responses enable row level security;
+alter table public.contact_exchange_consents enable row level security;
